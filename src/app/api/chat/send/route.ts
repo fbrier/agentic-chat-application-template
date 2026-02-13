@@ -5,10 +5,12 @@ import { getLogger } from "@/core/logging";
 import {
   addMessage,
   createConversation,
+  generateHumorousImage,
   generateTitleFromMessage,
   getMessages,
   SendMessageSchema,
   streamChatCompletion,
+  updateMessageImage,
 } from "@/features/chat";
 
 const logger = getLogger("api.chat.send");
@@ -49,12 +51,23 @@ export async function POST(request: NextRequest) {
           controller.enqueue(value);
           return;
         }
-        // Stream finished — save assistant message
+        // Stream finished — save assistant message, then generate image
         const encoder = new TextEncoder();
         try {
           const fullText = await fullResponse;
-          await addMessage(conversationId, "assistant", fullText);
+          const savedMessage = await addMessage(conversationId, "assistant", fullText);
           logger.info({ conversationId }, "chat.assistant_message_saved");
+
+          // Generate humorous image (non-blocking to chat flow)
+          const imageUrl = await generateHumorousImage(fullText);
+          if (imageUrl) {
+            await updateMessageImage(savedMessage.id, imageUrl);
+            controller.enqueue(
+              encoder.encode(`data: ${JSON.stringify({ type: "image", url: imageUrl })}\n\n`),
+            );
+            logger.info({ conversationId, messageId: savedMessage.id }, "chat.image_attached");
+          }
+
           controller.enqueue(
             encoder.encode(`data: ${JSON.stringify({ type: "done", saved: true })}\n\n`),
           );

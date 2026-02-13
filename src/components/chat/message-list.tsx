@@ -1,6 +1,7 @@
 "use client";
 
 import { Bot } from "lucide-react";
+import Image from "next/image";
 import { useEffect, useRef } from "react";
 
 import { useAutoScroll } from "@/hooks/use-auto-scroll";
@@ -11,15 +12,22 @@ interface Message {
   id: string;
   role: string;
   content: string;
+  imageUrl?: string | null;
 }
 
 interface MessageListProps {
   messages: Message[];
   streamingContent: string;
+  streamingImage: string | null;
   isStreaming: boolean;
 }
 
-export function MessageList({ messages, streamingContent, isStreaming }: MessageListProps) {
+export function MessageList({
+  messages,
+  streamingContent,
+  streamingImage,
+  isStreaming,
+}: MessageListProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const { scrollToBottom, isScrolledToBottom } = useAutoScroll(containerRef);
   const prevMessageCountRef = useRef(messages.length);
@@ -46,7 +54,12 @@ export function MessageList({ messages, streamingContent, isStreaming }: Message
     <div ref={containerRef} className="flex-1 overflow-y-auto">
       <div className="mx-auto max-w-3xl py-4">
         {messages.map((message) => (
-          <MessageBubble key={message.id} role={message.role} content={message.content} />
+          <MessageBubble
+            key={message.id}
+            role={message.role}
+            content={message.content}
+            imageUrl={message.imageUrl}
+          />
         ))}
         {isStreaming && streamingContent && (
           <div className="flex gap-3 px-4 py-3">
@@ -58,6 +71,16 @@ export function MessageList({ messages, streamingContent, isStreaming }: Message
                 {streamingContent}
                 <span className="streaming-cursor ml-0.5 inline-block h-4 w-1.5 align-middle" />
               </p>
+              {streamingImage && (
+                <Image
+                  src={streamingImage}
+                  alt="AI-generated humorous illustration"
+                  width={512}
+                  height={512}
+                  unoptimized
+                  className="mt-3 max-w-full rounded-xl"
+                />
+              )}
             </div>
           </div>
         )}

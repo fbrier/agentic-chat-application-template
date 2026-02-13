@@ -1,6 +1,7 @@
 "use client";
 
 import { Bot, User } from "lucide-react";
+import Image from "next/image";
 
 import { cn } from "@/lib/utils";
 
@@ -9,9 +10,10 @@ import { MarkdownContent } from "./markdown-content";
 interface MessageBubbleProps {
   role: string;
   content: string;
+  imageUrl?: string | null | undefined;
 }
 
-export function MessageBubble({ role, content }: MessageBubbleProps) {
+export function MessageBubble({ role, content, imageUrl }: MessageBubbleProps) {
   const isUser = role === "user";
 
   return (
@@ -32,7 +34,19 @@ export function MessageBubble({ role, content }: MessageBubbleProps) {
         {isUser ? (
           <p className="text-sm whitespace-pre-wrap">{content}</p>
         ) : (
-          <MarkdownContent content={content} />
+          <>
+            <MarkdownContent content={content} />
+            {imageUrl && (
+              <Image
+                src={imageUrl}
+                alt="AI-generated humorous illustration"
+                width={512}
+                height={512}
+                unoptimized
+                className="mt-3 max-w-full rounded-xl"
+              />
+            )}
+          </>
         )}
       </div>
       {isUser && (

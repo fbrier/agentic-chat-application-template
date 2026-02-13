@@ -79,11 +79,19 @@ async function setup() {
       "conversation_id" uuid NOT NULL REFERENCES "${p("chat_conversations")}"("id") ON DELETE CASCADE,
       "role" text NOT NULL,
       "content" text NOT NULL,
+      "image_url" text,
       "created_at" timestamp DEFAULT now() NOT NULL,
       "updated_at" timestamp DEFAULT now() NOT NULL
     )
   `);
   console.log(`  ${p("chat_messages")}`);
+
+  // 5. Migration: add image_url to existing chat_messages tables
+  await sql.unsafe(`
+    ALTER TABLE "${p("chat_messages")}"
+    ADD COLUMN IF NOT EXISTS "image_url" text
+  `);
+  console.log(`  ${p("chat_messages")} (image_url migration)`);
 
   console.log("\nDone! All tables created.");
 

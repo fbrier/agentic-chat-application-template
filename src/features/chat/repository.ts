@@ -61,3 +61,15 @@ export async function createMessage(data: NewMessage): Promise<Message> {
   }
   return message;
 }
+
+export async function updateMessageImageUrl(
+  messageId: string,
+  imageUrl: string,
+): Promise<Message | undefined> {
+  const results = await db
+    .update(messages)
+    .set({ imageUrl, updatedAt: new Date() })
+    .where(eq(messages.id, messageId))
+    .returning();
+  return results[0];
+}

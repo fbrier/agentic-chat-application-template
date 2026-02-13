@@ -46,6 +46,10 @@ export const env = {
   // OpenRouter config (LLM)
   OPENROUTER_API_KEY: getRequiredEnv("OPENROUTER_API_KEY"),
   OPENROUTER_MODEL: getOptionalEnv("OPENROUTER_MODEL", "anthropic/claude-haiku-4.5"),
+
+  // Image generation (optional)
+  OPENROUTER_IMAGE_MODEL: getOptionalEnv("OPENROUTER_IMAGE_MODEL", "black-forest-labs/flux.2-pro"),
+  OPENROUTER_IMAGE_PROMPT_MODEL: getOptionalEnv("OPENROUTER_IMAGE_PROMPT_MODEL", ""),
 } as const;
 
 export type Env = typeof env;

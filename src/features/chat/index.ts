@@ -10,6 +10,8 @@ export {
   OpenRouterError,
   StreamError,
 } from "./errors";
+// Image generation
+export { generateHumorousImage } from "./image-generation";
 export type { Conversation, Message, NewConversation, NewMessage } from "./models";
 export type {
   CreateConversationInput,
@@ -18,7 +20,6 @@ export type {
 } from "./schemas";
 // Schemas (for validation)
 export { CreateConversationSchema, SendMessageSchema, UpdateConversationSchema } from "./schemas";
-
 // Service functions (public API)
 export {
   addMessage,
@@ -28,7 +29,7 @@ export {
   getConversation,
   getMessages,
   updateConversation,
+  updateMessageImage,
 } from "./service";
-
 // Stream functions
 export { buildMessages, streamChatCompletion } from "./stream";

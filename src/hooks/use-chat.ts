@@ -10,16 +10,25 @@ interface ChatMessage {
   conversationId: string;
   role: string;
   content: string;
+  imageUrl?: string | null;
   createdAt: string;
   updatedAt: string;
+}
+
+interface SSEResult {
+  text: string;
+  imageUrl: string | null;
 }
 
 async function readSSEStream(
   reader: ReadableStreamDefaultReader<Uint8Array>,
   onChunk: (accumulated: string) => void,
-): Promise<string> {
+  onImage?: (url: string) => void,
+): Promise<SSEResult> {
   const decoder = new TextDecoder();
   let accumulated = "";
+  let imageUrl: string | null = null;
+  let buffer = "";
 
   for (;;) {
     const { done, value } = await reader.read();
@@ -27,8 +36,10 @@ async function readSSEStream(
       break;
     }
 
-    const text = decoder.decode(value, { stream: true });
-    const lines = text.split("\n");
+    buffer += decoder.decode(value, { stream: true });
+    const lines = buffer.split("\n");
+    // Keep the last (potentially incomplete) line in the buffer
+    buffer = lines.pop() ?? "";
 
     for (const line of lines) {
       if (!line.startsWith("data: ")) {
@@ -36,16 +47,22 @@ async function readSSEStream(
       }
       const data = line.slice(6);
       if (data === "[DONE]") {
-        return accumulated;
+        continue;
       }
       try {
         const parsed = JSON.parse(data) as {
           content?: string;
           type?: string;
           message?: string;
+          url?: string;
         };
         if (parsed.type === "error") {
           toast.error(parsed.message ?? "Response may not have been saved");
+          continue;
+        }
+        if (parsed.type === "image" && parsed.url) {
+          imageUrl = parsed.url;
+          onImage?.(parsed.url);
           continue;
         }
         if (parsed.type === "done") {
@@ -61,7 +78,7 @@ async function readSSEStream(
     }
   }
 
-  return accumulated;
+  return { text: accumulated, imageUrl };
 }
 
 function makeTempMessage(conversationId: string, role: string, content: string): ChatMessage {
@@ -87,6 +104,7 @@ export function useChat() {
   const [isStreaming, setIsStreaming] = useState(false);
   const [isLoadingMessages, setIsLoadingMessages] = useState(false);
   const [streamingContent, setStreamingContent] = useState("");
+  const [streamingImage, setStreamingImage] = useState<string | null>(null);
   const abortControllerRef = useRef<AbortController | null>(null);
   const skipNextFetchRef = useRef(false);
 
@@ -127,6 +145,7 @@ export function useChat() {
 
       setIsStreaming(true);
       setStreamingContent("");
+      setStreamingImage(null);
 
       const abortController = new AbortController();
       abortControllerRef.current = abortController;
@@ -168,14 +187,17 @@ export function useChat() {
           throw new Error("No reader");
         }
 
-        const accumulated = await readSSEStream(reader, setStreamingContent);
+        const result = await readSSEStream(reader, setStreamingContent, setStreamingImage);
 
-        if (accumulated) {
+        if (result.text) {
           const assistantMessage = makeTempMessage(
             conversationId ?? activeConversationId ?? "",
             "assistant",
-            accumulated,
+            result.text,
           );
+          if (result.imageUrl) {
+            assistantMessage.imageUrl = result.imageUrl;
+          }
           setMessages((prev) => [...prev, assistantMessage]);
         }
       } catch (error) {
@@ -188,6 +210,7 @@ export function useChat() {
         abortControllerRef.current = null;
         setIsStreaming(false);
         setStreamingContent("");
+        setStreamingImage(null);
       }
     },
     [activeConversationId, isStreaming, addItem, updateItem],
@@ -197,6 +220,7 @@ export function useChat() {
     abortControllerRef.current?.abort();
     setActiveConversationId(id);
     setStreamingContent("");
+    setStreamingImage(null);
   }, []);
 
   const createNewChat = useCallback(() => {
@@ -204,6 +228,7 @@ export function useChat() {
     setActiveConversationId(null);
     setMessages([]);
     setStreamingContent("");
+    setStreamingImage(null);
   }, []);
 
   const renameConversation = useCallback(
@@ -247,6 +272,7 @@ export function useChat() {
     isStreaming,
     isLoadingMessages,
     streamingContent,
+    streamingImage,
     sendMessage,
     selectConversation,
     createNewChat,

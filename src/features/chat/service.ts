@@ -78,6 +78,14 @@ export async function addMessage(
   return message;
 }
 
+export async function updateMessageImage(messageId: string, imageUrl: string): Promise<void> {
+  logger.info({ messageId }, "message.image_update_started");
+
+  await repository.updateMessageImageUrl(messageId, imageUrl);
+
+  logger.info({ messageId }, "message.image_update_completed");
+}
+
 export function generateTitleFromMessage(content: string): string {
   const trimmed = content.trim();
   if (trimmed.length <= 50) {

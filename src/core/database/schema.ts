@@ -83,5 +83,6 @@ export const chatMessages = pgTable(t("chat_messages"), {
     .references(() => chatConversations.id, { onDelete: "cascade" }),
   role: text("role").notNull(),
   content: text("content").notNull(),
+  imageUrl: text("image_url"),
   ...timestamps,
 });

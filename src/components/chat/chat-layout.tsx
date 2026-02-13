@@ -19,6 +19,7 @@ export function ChatLayout() {
     isStreaming,
     isLoadingMessages,
     streamingContent,
+    streamingImage,
     sendMessage,
     selectConversation,
     createNewChat,
@@ -79,6 +80,7 @@ export function ChatLayout() {
           <MessageList
             messages={messages}
             streamingContent={streamingContent}
+            streamingImage={streamingImage}
             isStreaming={isStreaming}
           />
         ) : (

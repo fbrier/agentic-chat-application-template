@@ -46,6 +46,7 @@ const mockMessage: Message = {
   conversationId: "550e8400-e29b-41d4-a716-446655440000",
   role: "user",
   content: "Hello, world!",
+  imageUrl: null,
   createdAt: new Date(),
   updatedAt: new Date(),
 };
